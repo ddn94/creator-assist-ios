@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { IdeaCard } from "@/components/ideas";
+import { TourTarget } from "@/components/TourTarget";
 import { SelectField } from "@/components/pickers";
 import { showToast } from "@/components/Toast";
 import {
@@ -180,8 +181,9 @@ export default function IdeasScreen() {
         />
       </View>
 
-      <View style={{ marginTop: 12, gap: 12 }}>
-        {filtered.map((idea) => (
+      <TourTarget name="tour-idea-fallback" style={{ marginTop: 12, gap: 12 }}>
+        {filtered.map((idea, index) => {
+          const card = (
           <IdeaCard
             key={idea.id}
             idea={idea}
@@ -239,9 +241,17 @@ export default function IdeasScreen() {
               router.push(`/(talent)/tracker/${result.id}`);
             }}
           />
-        ))}
+          );
+          return index === 0 ? (
+            <TourTarget key={idea.id} name="tour-idea" radius={24}>
+              {card}
+            </TourTarget>
+          ) : (
+            card
+          );
+        })}
         {filtered.length === 0 ? <EmptyText>No ideas here yet.</EmptyText> : null}
-      </View>
+      </TourTarget>
     </Screen>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LayoutAnimation, Pressable, StyleSheet, View } from "react-native";
 import { Icon } from "@/components/Icon";
+import { TourTarget } from "@/components/TourTarget";
 import { DateField, SelectField } from "@/components/pickers";
 import { showToast } from "@/components/Toast";
 import {
@@ -180,7 +181,7 @@ export function DealTable({
       <AppText variant="title" style={{ fontSize: 18, marginBottom: 12 }}>
         Deals
       </AppText>
-      <View style={[ui.card, { overflow: "hidden" }]}>
+      <TourTarget name="tour-deal" radius={24} style={[ui.card, { overflow: "hidden" }]}>
         {deals.map((deal, index) => (
           <Pressable
             key={deal.id}
@@ -223,7 +224,7 @@ export function DealTable({
             <AppText variant="description">No deals yet.</AppText>
           </View>
         ) : null}
-      </View>
+      </TourTarget>
     </View>
   );
 }

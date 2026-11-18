@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LayoutAnimation, Pressable, StyleSheet, View } from "react-native";
 import { Icon } from "@/components/Icon";
+import { TourTarget } from "@/components/TourTarget";
 import { DateField, SelectField } from "@/components/pickers";
 import {
   AppText,
@@ -30,11 +31,14 @@ export function TrackerItemCard({
   onOpen,
   onAdvance,
   onRevisionBack,
+  tourAnchor = false,
 }: {
   item: TrackerItem;
   onOpen?: (id: string) => void;
   onAdvance?: (id: string) => void;
   onRevisionBack?: (id: string) => void;
+  /** Website tour-content: spotlight this card during the product tour. */
+  tourAnchor?: boolean;
 }) {
   const category = contentCategory(item.type);
   const pending = item.id.startsWith("pending-");
@@ -48,7 +52,7 @@ export function TrackerItemCard({
     .filter(Boolean)
     .join(" · ");
 
-  return (
+  const card = (
     <CategoryCard category={category}>
       <Pressable
         disabled={pending}
@@ -86,6 +90,12 @@ export function TrackerItemCard({
         </Pressable>
       ) : null}
     </CategoryCard>
+  );
+  if (!tourAnchor) return card;
+  return (
+    <TourTarget name="tour-content" radius={24}>
+      {card}
+    </TourTarget>
   );
 }
 

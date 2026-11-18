@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Icon } from "@/components/Icon";
+import { TourTarget } from "@/components/TourTarget";
 import { AgencyPaymentCard, PaymentCard, PaymentEditModal } from "@/components/payments";
 import { showToast } from "@/components/Toast";
 import { AppText, EmptyText, FilterPills } from "@/components/ui";
@@ -144,7 +145,7 @@ export function PaymentList({
           Due {dir === "asc" ? "soonest first" : "latest first"}
         </AppText>
       </Pressable>
-      <View style={{ marginTop: 10, gap: 12 }}>
+      <TourTarget name="tour-payments" radius={24} style={{ marginTop: 10, gap: 12 }}>
         {filtered.map((payment) =>
           mode === "talent" ? (
             <PaymentCard
@@ -183,7 +184,7 @@ export function PaymentList({
                 : "No payments in this filter."}
           </EmptyText>
         ) : null}
-      </View>
+      </TourTarget>
       {mode === "agency" ? (
         <PaymentEditModal
           payment={editing}

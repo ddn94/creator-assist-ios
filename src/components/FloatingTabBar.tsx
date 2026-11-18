@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "@/components/Icon";
+import { TourTarget } from "@/components/TourTarget";
 import { colors, fonts } from "@/lib/colors";
 
 export type NavRole = "talent" | "agency";
@@ -77,24 +78,26 @@ export function FloatingTabBar({ role }: { role: NavRole }) {
   const renderTab = (tab: Tab) => {
     const active = isActive(pathname, tab);
     return (
-      <Pressable
-        key={tab.href}
-        accessibilityRole="tab"
-        accessibilityState={{ selected: active }}
-        accessibilityLabel={tab.label}
-        onPress={() => go(tab.href)}
-        style={styles.tab}
-      >
-        <Icon
-          name={active ? tab.activeIcon : tab.icon}
-          size={21}
-          color={active ? colors.background : colors.white40}
-          weight="regular"
-        />
-        <Text style={[styles.label, { color: active ? colors.background : colors.white40 }]}>
-          {tab.label}
-        </Text>
-      </Pressable>
+      <TourTarget key={tab.href} name={`tour-tab:${tab.path}`} radius={0} style={styles.tabTarget}>
+        {/* Website tab links have no corner radius, so this cutout stays square. */}
+        <Pressable
+          accessibilityRole="tab"
+          accessibilityState={{ selected: active }}
+          accessibilityLabel={tab.label}
+          onPress={() => go(tab.href)}
+          style={styles.tab}
+        >
+          <Icon
+            name={active ? tab.activeIcon : tab.icon}
+            size={21}
+            color={active ? colors.background : colors.white40}
+            weight="regular"
+          />
+          <Text style={[styles.label, { color: active ? colors.background : colors.white40 }]}>
+            {tab.label}
+          </Text>
+        </Pressable>
+      </TourTarget>
     );
   };
 
@@ -116,28 +119,33 @@ export function FloatingTabBar({ role }: { role: NavRole }) {
       </View>
       {/* Sibling of the bar so the half above it still receives touches. */}
       <View pointerEvents="box-none" style={styles.centerWrap}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={center.mode === "tab" ? center.tab.label : center.label}
-          onPress={() => go(center.mode === "tab" ? center.tab.href : center.href)}
-          style={({ pressed }) => [
-            styles.centerButton,
-            pressed && { backgroundColor: colors.primaryHover },
-          ]}
+        <TourTarget
+          name={center.mode === "tab" ? `tour-tab:${center.tab.path}` : "tour-tab:add"}
+          radius={28}
         >
-          <Icon
-            name={
-              center.mode === "tab"
-                ? centerActive
-                  ? center.tab.activeIcon
-                  : center.tab.icon
-                : "plus"
-            }
-            size={center.mode === "tab" ? 24 : 26}
-            color={colors.onPrimary}
-            weight="bold"
-          />
-        </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={center.mode === "tab" ? center.tab.label : center.label}
+            onPress={() => go(center.mode === "tab" ? center.tab.href : center.href)}
+            style={({ pressed }) => [
+              styles.centerButton,
+              pressed && { backgroundColor: colors.primaryHover },
+            ]}
+          >
+            <Icon
+              name={
+                center.mode === "tab"
+                  ? centerActive
+                    ? center.tab.activeIcon
+                    : center.tab.icon
+                  : "plus"
+              }
+              size={center.mode === "tab" ? 24 : 26}
+              color={colors.onPrimary}
+              weight="bold"
+            />
+          </Pressable>
+        </TourTarget>
       </View>
     </View>
   );
@@ -158,6 +166,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  tabTarget: { flex: 1 },
   tab: {
     flex: 1,
     minHeight: 58,

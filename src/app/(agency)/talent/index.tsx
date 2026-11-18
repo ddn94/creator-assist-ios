@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { TalentRow } from "@/components/roster";
+import { TourTarget } from "@/components/TourTarget";
 import {
   AppText,
   Button,
@@ -103,7 +104,7 @@ export default function TalentRosterScreen() {
           setPage(0);
         }}
       />
-      <View style={[ui.card, { overflow: "hidden", marginTop: 16 }]}>
+      <TourTarget name="tour-roster" radius={24} style={[ui.card, { overflow: "hidden", marginTop: 16 }]}>
         {visible.map((talent, index) => (
           <TalentRow
             key={talent.id}
@@ -121,7 +122,7 @@ export default function TalentRosterScreen() {
             </AppText>
           </View>
         ) : null}
-      </View>
+      </TourTarget>
       <Pagination page={currentPage} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
     </Screen>
   );

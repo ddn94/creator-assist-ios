@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { BreakdownList, CurrencyPicker, PnlDateRangeControl } from "@/components/shared";
+import { TourTarget } from "@/components/TourTarget";
 import {
   AppText,
   CategoryPill,
@@ -90,7 +91,11 @@ export default function TalentPnlScreen() {
         }
       />
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 20 }}>
+      <TourTarget
+        name="tour-pnl"
+        radius={24}
+        style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 20 }}
+      >
         <StatCard style={{ minWidth: "46%" }} label="Total revenue" value={fmt(summary.revenue)} tone="collab" />
         <StatCard style={{ minWidth: "46%" }} label="Total expenses" value={fmt(summary.expenses)} tone="payment" />
         <StatCard
@@ -107,7 +112,7 @@ export default function TalentPnlScreen() {
           tone="card"
           valueColor={summary.overdue > 0 ? colors.danger : undefined}
         />
-      </View>
+      </TourTarget>
 
       <ListCard title="Per-content P&L" style={{ marginTop: 24, marginBottom: 16 }}>
         {rows.map((row, index) => (

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { CurrencyPicker, PnlDateRangeControl } from "@/components/shared";
+import { TourTarget } from "@/components/TourTarget";
 import {
   AppText,
   Avatar,
@@ -104,7 +105,8 @@ export default function AgencyPnlScreen() {
       />
 
       {summary ? (
-        <Card padding={16} style={{ marginTop: 16 }}>
+        <TourTarget name="tour-pnl" radius={24} style={{ marginTop: 16 }}>
+        <Card padding={16}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <AppText variant="title" style={{ fontSize: 17 }}>
               {summary.name}
@@ -124,7 +126,10 @@ export default function AgencyPnlScreen() {
             ))}
           </View>
         </Card>
-      ) : null}
+        </TourTarget>
+      ) : (
+        <TourTarget name="tour-pnl-fallback" style={{ marginTop: 16 }} />
+      )}
 
       <ListCard title="By talent" style={{ marginTop: 24 }}>
         {talent.length === 0 ? (

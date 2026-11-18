@@ -1,9 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { AddContentPanel, type AddContentPayload } from "@/components/content";
-import { TrackerItemCard } from "@/components/content";
+import { AddContentPanel, TrackerItemCard, type AddContentPayload } from "@/components/content";
 import { showToast } from "@/components/Toast";
+import { TourTarget } from "@/components/TourTarget";
 import {
   EmptyText,
   FilterPills,
@@ -16,7 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { addContent, setContentStage } from "@/lib/api";
 import { listMyContent } from "@/lib/data";
 import { toListItem } from "@/lib/map";
-import { contentPlatformOptions, DEFAULT_PLATFORM } from "@/lib/platforms";
+import { DEFAULT_PLATFORM, contentPlatformOptions } from "@/lib/platforms";
 import { asAnswers, readPlatforms } from "@/lib/profileAnswers";
 import {
   STAGES,
@@ -27,6 +24,9 @@ import {
   type Stage,
   type TrackerItem,
 } from "@/lib/tracker";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { View } from "react-native";
 
 export default function TrackerScreen() {
   const { profile } = useAuth();
@@ -75,6 +75,10 @@ export default function TrackerScreen() {
     readPlatforms(asAnswers(me.onboarding)).map((row) => row.platform),
   );
   const activeItems = rows.filter((item) => item.stage === activeStage);
+  const sample = rows.find((item) => item.title === "Sample paid collab");
+  const tourItemId = activeItems.some((item) => item.id === sample?.id)
+    ? sample?.id
+    : activeItems[0]?.id;
 
   function moveStage(id: string, stage: Stage) {
     const current = rowsRef.current;
@@ -167,11 +171,12 @@ export default function TrackerScreen() {
           count: counts[stage] || undefined,
         }))}
       />
-      <View style={{ marginTop: 12, gap: 12 }}>
+      <TourTarget name="tour-content-fallback" style={{ marginTop: 12, gap: 12 }}>
         {activeItems.map((item) => (
           <TrackerItemCard
             key={item.id}
             item={item}
+            tourAnchor={item.id === tourItemId}
             onOpen={(id) => router.push(`/(talent)/tracker/${id}`)}
             onAdvance={(id) => {
               const stage = nextStage(item.stage);
@@ -186,7 +191,7 @@ export default function TrackerScreen() {
         {activeItems.length === 0 ? (
           <EmptyText>Nothing in {STAGE_LABELS[activeStage]}.</EmptyText>
         ) : null}
-      </View>
+      </TourTarget>
     </Screen>
   );
 }
