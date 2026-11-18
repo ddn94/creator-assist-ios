@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  readTourTarget,
+  requestTourMeasure,
+  SpotlightCorners,
+  spotlightBands,
+  spotlightShade,
+  subscribeTourTargets,
+  type TourBox,
+} from "@/components/TourTarget";
 import { useAuth } from "@/context/AuthContext";
 import { completeProductTour } from "@/lib/api";
 import { cardShadow, colors, fonts } from "@/lib/colors";
@@ -10,7 +19,7 @@ import { tourStartHref, tourSteps } from "@/lib/tour";
 
 /**
  * Website ProductTour: runs once after onboarding while
- * profiles.onboarding.productTour is "pending". Skip stays put; Done goes home.
+ * profiles.onboarding.productTour is "pending". Skip stays put. Done goes home.
  */
 export function TourProvider({ children }: { children: ReactNode }) {
   const { profile, refreshProfile } = useAuth();
@@ -31,6 +40,52 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const visible = Boolean(pending && !closed && steps.length > 0);
   const step = steps[stepIndex] ?? null;
   const last = stepIndex >= steps.length - 1;
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const [spots, setSpots] = useState<{ content: TourBox; tab: TourBox | null } | null>(null);
+  const [cardHeight, setCardHeight] = useState(200);
+
+  useEffect(() => {
+    if (!visible || !step) {
+      setSpots(null);
+      return;
+    }
+    const currentStep = step;
+    let cancelled = false;
+    setSpots(null);
+    function same(a: TourBox | null, b: TourBox | null) {
+      if (a === b) return true;
+      if (!a || !b) return false;
+      return (
+        a.x === b.x &&
+        a.y === b.y &&
+        a.width === b.width &&
+        a.height === b.height &&
+        a.radius === b.radius
+      );
+    }
+    function apply() {
+      const content = readTourTarget(currentStep.target) ?? readTourTarget(currentStep.fallback);
+      const tab = readTourTarget(`tour-tab:${currentStep.tab}`);
+      if (cancelled || !content) return;
+      setSpots((current) => {
+        if (current && same(current.content, content) && same(current.tab, tab)) return current;
+        return { content, tab };
+      });
+    }
+    function refresh() {
+      requestTourMeasure(currentStep.target);
+      requestTourMeasure(currentStep.fallback);
+      requestTourMeasure(`tour-tab:${currentStep.tab}`);
+    }
+    refresh();
+    const timer = setInterval(refresh, 250);
+    const unsubscribe = subscribeTourTargets(apply);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      unsubscribe();
+    };
+  }, [visible, step]);
 
   async function finish(goHome: boolean) {
     if (!profile) return;
@@ -66,12 +121,61 @@ export function TourProvider({ children }: { children: ReactNode }) {
     void open(next);
   }
 
+  const contentSpot = spots?.content ?? null;
+  const tabSpot = spots?.tab ?? null;
+  const holes = [contentSpot, tabSpot].filter((hole): hole is TourBox => hole != null);
+  const cardTop = contentSpot
+    ? placeCard(contentSpot, tabSpot, screenHeight, cardHeight, Math.max(insets.top, 16))
+    : null;
+
   return (
     <>
       {children}
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => void finish(false)}>
-        <View style={[styles.backdrop, { paddingBottom: Math.max(insets.bottom, 16) + 72 }]}>
-          <View style={[styles.card, cardShadow]}>
+        <View style={styles.overlay}>
+          <View style={StyleSheet.absoluteFill} />
+          {spotlightBands(screenWidth, screenHeight, holes).map((band) =>
+            band.spans.map((span) => (
+              <View
+                key={`${band.y}-${span.x}`}
+                pointerEvents="none"
+                style={[
+                  styles.shade,
+                  { top: band.y, height: band.height, left: span.x, width: span.width },
+                ]}
+              />
+            )),
+          )}
+          <SpotlightCorners holes={holes} />
+          {contentSpot ? (
+            <View
+              pointerEvents="none"
+              style={[
+                styles.lift,
+                {
+                  top: contentSpot.y,
+                  left: contentSpot.x,
+                  width: contentSpot.width,
+                  height: contentSpot.height,
+                  borderRadius: Math.min(
+                    contentSpot.radius,
+                    contentSpot.width / 2,
+                    contentSpot.height / 2,
+                  ),
+                },
+              ]}
+            />
+          ) : null}
+          <View
+            pointerEvents="box-none"
+            style={[
+              styles.cardWrap,
+              cardTop == null
+                ? { justifyContent: "flex-end", paddingBottom: Math.max(insets.bottom, 16) + 72 }
+                : { paddingTop: cardTop },
+            ]}
+          >
+          <View style={[styles.card, cardShadow]} onLayout={(event) => setCardHeight(event.nativeEvent.layout.height)}>
             <View style={styles.dots}>
               {steps.map((item, index) => (
                 <View
@@ -101,17 +205,51 @@ export function TourProvider({ children }: { children: ReactNode }) {
               </Pressable>
             </View>
           </View>
+          </View>
         </View>
       </Modal>
     </>
   );
 }
 
+/** Sit the card under the spotlight when it fits, otherwise above it. */
+function placeCard(
+  content: TourBox,
+  tab: TourBox | null,
+  screenHeight: number,
+  cardHeight: number,
+  topMargin: number,
+) {
+  const gap = 12;
+  const bottomLimit = (tab?.y ?? screenHeight) - gap;
+  const below = content.y + content.height + gap;
+  const above = content.y - gap - cardHeight;
+  if (below + cardHeight <= bottomLimit) return below;
+  if (above >= topMargin) return above;
+  return Math.max(topMargin, bottomLimit - cardHeight);
+}
+
 const styles = StyleSheet.create({
-  backdrop: {
+  overlay: { flex: 1, overflow: "visible" },
+  shade: {
+    position: "absolute",
+    backgroundColor: spotlightShade,
+  },
+  // Website Dimmer lifts the spotlighted view: 0 14px 36px rgba(32, 37, 43, 0.28).
+  lift: {
+    position: "absolute",
+    borderCurve: "circular",
+    boxShadow: [
+      {
+        offsetX: 0,
+        offsetY: 14,
+        blurRadius: 36,
+        color: "rgba(32, 37, 43, 0.28)",
+      },
+    ],
+  },
+  cardWrap: {
     flex: 1,
-    backgroundColor: "rgba(32,37,43,0.35)",
-    justifyContent: "flex-end",
     paddingHorizontal: 16,
   },
   card: {
