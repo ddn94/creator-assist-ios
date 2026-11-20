@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
 import * as Linking from "expo-linking";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -15,6 +14,7 @@ import {
   Urbanist_800ExtraBold,
 } from "@expo-google-fonts/urbanist";
 import * as SplashScreen from "expo-splash-screen";
+import { SplashOverlay } from "@/components/SplashOverlay";
 import { ToastHost } from "@/components/Toast";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { handleAuthRedirect } from "@/lib/authLinks";
@@ -89,21 +89,6 @@ function RootNavigator() {
     }
   }, [ready, session, profile, configured, segments, router]);
 
-  if (!ready) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <ActivityIndicator color={colors.primary} size="large" />
-      </View>
-    );
-  }
-
   return (
     <>
       <StatusBar style="dark" />
@@ -121,6 +106,7 @@ function RootNavigator() {
         <Stack.Screen name="admin/waitlist" />
       </Stack>
       <ToastHost />
+      <SplashOverlay ready={ready} />
     </>
   );
 }
@@ -135,10 +121,7 @@ export default function RootLayout() {
     Urbanist_800ExtraBold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
-
+  // Keep the native splash up until fonts load; SplashOverlay takes over from there.
   if (!fontsLoaded) return null;
 
   return (

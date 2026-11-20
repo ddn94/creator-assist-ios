@@ -11,8 +11,12 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.creatorassist.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+        "EXDevMenuShowFloatingActionButton": false,
+        "EXDevMenuShowsAtLaunch": false,
+        "EXDevMenuIsOnboardingFinished": true
+      },
+      "appleTeamId": "764RS49AS6"
     },
     "android": {
       "adaptiveIcon": {
@@ -35,7 +39,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FAF5EA",
-          "image": "./assets/images/app-icon.png",
+          "image": "./assets/images/splash-icon.png",
           "imageWidth": 96
         }
       ],
